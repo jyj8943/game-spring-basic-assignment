@@ -60,12 +60,18 @@ public class GameService {
     @Transactional
     public GameDetailResponse updateProgress(Long gameId, ProgressRequest request) {
         Game game = findGame(gameId);
+
+        if (game.isFinished()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT);
+        }
+
         game.updateProgress(
             request.getCurrentHp(),
             request.getCurrentFloor(),
             request.getPhase(),
             request.getStatus()
         );
+
         // 요청의 deck은 저장할 덱 전체이므로 기존 카드를 모두 지우고 요청 순서대로 다시 저장합니다.
         runCardRepository.deleteAllByGame(game);
         saveDeck(game, request.getDeck());
